@@ -1,0 +1,49 @@
+
+{% extends 'base.html' %}
+
+{% block title %}
+    <title>{{ ls.title }}</title>
+{% endblock %}
+{% block content %}
+    <div class="body">
+        <div>
+            <ul class="grid">  
+                
+                {% for week in data %}
+                    {% for day in week %}
+                        {{ ls.day }}
+                        {% if day != 0 and day >= ls.DATE %}
+                            {% set d = date(2025, ls.index, day) %}
+                            {% set n = d.weekday() %}
+                            {% if n < 5 %}
+                                <li class="li">
+                                    <form action="/{{ ls.doctor }}/{{ ls.title }}/{{ ls.index }}/{{ day }}/{{ ls.doctor_name }}" method="POST">
+                                        {{ ls[n] }}
+                                        <input class="li" type="submit" class="btn btn-dark" value="{{ day }}">
+                                    </form>
+                                </li>
+                            {% else %}
+                                <li class="li1">
+                                    {{ ls[n] }}
+                                    <form action="#" method="POST"> 
+                                        <input class="li1" type="submit" class="btn btn-dark" value="{{ day }}">   
+                                    </form>
+                                </li>
+                            {% endif %}
+                        {% endif %}
+                        
+                    {% endfor %}
+                {% endfor %} 
+                
+            </ul>
+        </div>
+                                               
+        </div>
+    </div>
+    <hr>
+    <button class="li"><a href="/">На главную</a></button>
+    <button class="li"><a href="/calendar/{{ ls.doctor }}/{{ ls.title }}/{{ ls.doctor_name }}/">
+            Назад</a></button>
+    
+{% endblock %}
+

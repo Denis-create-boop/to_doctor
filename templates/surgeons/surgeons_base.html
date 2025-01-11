@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<title>{{ ls.title }}</title>
+{% endblock %}
+{% block content %}
+    <h1 class="h1">Выберите специалиста к которому хотите записаться на прием</h1>
+    <div class="names">
+        <ul>
+            <li>
+                {% set doctor_name = 'Бублик Е.И.' %}
+                <a href="/calendar/surgeons/data_bublic/{{ doctor_name }}" class="P">Бублие Е.И</a>.
+            </li>
+            <li>
+                {% set doctor_name = 'Прокопенко С.В.' %}
+                <a href="/calendar/surgeons/data_prokopenco/{{ doctor_name }}" class="P">Прокопенко С.В.</a>
+            </li>
+            <li>
+                {% set doctor_name = 'Бублик Е.И.' %}
+                <a href="/calendar/surgeons/data_andropov/{{ doctor_name }}" class="P">Андропов Р.В.</a>
+            </li>
+            <li>
+                {% set doctor_name = 'Крынин И.А.' %}
+                <a href="/calendar/surgeons/data_krinin/{{ doctor_name }}" class="P">Крынин И.А.</a>
+            </li>
+            <li>
+                {% set doctor_name = 'Ресникова Н.С.' %}
+                <a href="/calendar/surgeons/data_resnicova/{{ doctor_name }}" class="P">Ресникова Н.С.</a>
+            </li>
+            <li>
+                {% set doctor_name = 'Тронина О.П.' %}
+                <a href="/calendar/surgeons/data_tronina/{{ doctor_name }}" class="P">Тронина О.П.</a>
+            </li>
+        </ul>
+    </div>
+    <hr>
+    <button class="li"><a href="/">Назад</a></button>
+{% endblock %}

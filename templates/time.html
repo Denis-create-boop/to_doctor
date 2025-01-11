@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    <title>{{ ls.title }}</title>
+{% endblock %}
+
+{% block content %}
+<div class="body">
+    <ul class="grid">
+        {% for k, v in times.items() %}
+            {% if v == '' %}
+                <li class="li">
+                    <form action="/write/{{ ls.doctor }}/{{ ls.name }}/{{ ls.month }}/{{ ls.day }}/{{ k }}/{{ ls.doctor_name }}" method="POST">
+                        <input class="li" type="submit" class="btn btn-dark" value="{{ k }}">
+                        {{ v }}
+                    </form>
+                </li>
+            {% else %}
+                <li class="li1">
+                    <form action="">
+                        <input class="li1" type="" class="btn btn-dark" value="{{ k }}">
+                        {{ v }}
+                    </form>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+    </ul>
+
+</div>
+
+<hr>
+<button class="li"><a href="/">На главную</a></button>
+<button class="li"><a href="/process_data/{{ ls.month }}/{{ ls.doctor }}/{{ ls.name }}/{{ ls.doctor_name }}/">
+        Назад</a></button>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<title>{{ ls.title }}</title>
+{% endblock %}
+
+{% block content %}
+<h1 class="h1">{{ wrong }}</h1>
+
+        <form action="/write_data/{{ ls.doctor }}/{{ ls.name }}/{{ ls.month }}/{{ ls.day }}/{{ ls.time }}/{{ ls.doctor_name }}" method="POST">
+            <input class="li" name="writer" type="text" placeholder="введите ФИО" name="my_name">
+            <input class="li" type="submit" value="записатся">
+        </form>
+        <hr>
+        <button class="li"><a href="/">На главную</a></button>
+        <button class="li"><a href="/{{ ls.doctor }}/{{ ls.name }}/{{ ls.month }}/{{ ls.day }}/{{ ls.doctor_name }}/"> Назад</a></button>
+
+
+{% endblock %}

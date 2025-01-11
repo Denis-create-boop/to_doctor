@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<title>{{ ls.title }}</title>
+{% endblock %}
+{% block content %}
+<h1 class="h1">{{ ls.month }}</h1>
+<div class="names">
+    <ul>
+        {% set i = month %}
+
+        {% for m in range(i, 13) %}
+            <li class="li">
+                <form action="/process_data/{{ m }}/{{ ls.doctor }}/{{ ls.name }}/{{ ls.doctor_name }}/" method="POST">
+                    <input class="li" type="submit" class="btn btn-dark" value="{{ months[m] }}">
+                </form>
+            </li>
+        {% endfor %}
+        
+    </ul>
+</div>
+<hr>
+<button class="li"><a href="/">На главную</a></button>
+<button class="li"><a href="/{{ ls.doctor }}">
+        Назад</a></button>
+
+
+{% endblock %}

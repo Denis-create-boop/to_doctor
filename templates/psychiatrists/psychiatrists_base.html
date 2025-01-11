@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}
+<title>{{ ls.title }}</title>
+{% endblock %}
+{% block content %}
+    <h1 class="h1">Выберите специалиста к которому хотите записаться на прием</h1>
+    <div class="names">
+        <ul>
+            <li>
+                {% set doctor_name = 'Сицина А.Л.' %}
+                <a href="/calendar/psychiatrists/data_siczhina/{{ doctor_name }}" class="P">Сицина А.Л.</a>.
+            </li>
+            <li>
+                {% set doctor_name = 'Полежайкин С.Р.' %}
+                <a href="/calendar/psychiatrists/data_polezhaykin/{{ doctor_name }}" class="P">Полежайкин С.Р.</a>
+            </li>
+            <li>
+                {% set doctor_name = 'Сыбин Д.А.' %}
+                <a href="/calendar/psychiatrists/data_subin/{{ doctor_name }}" class="P">Сыбин Д.А.</a>
+            </li>
+            <li>
+                {% set doctor_name = 'Дикарева О.С.' %}
+                <a href="/calendar/psychiatrists/data_dicareva/{{ doctor_name }}" class="P">Дикарева О.С.</a>
+            </li>
+            <li>
+                {% set doctor_name = 'Сидоров В.В.' %}
+                <a href="/calendar/psychiatrists/data_sidorov/{{ doctor_name }}" class="P">Сидоров В.В.</a>
+            </li>
+            <li>
+                {% set doctor_name = 'Тихонов А.В.' %}
+                <a href="/calendar/psychiatrists/data_tihonov/{{ doctor_name }}" class="P">Тихонов А.В.</a>
+            </li>
+        </ul>
+    </div>
+    <hr>
+    <button class="li"><a href="/">Назад</a></button>
+{% endblock %}

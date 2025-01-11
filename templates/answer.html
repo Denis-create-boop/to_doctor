@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    <title>{{ ls.title }}</title>
+{% endblock %}
+
+{% block content %}
+    <h1 class="h1">Вы успешно записаны к врачу {{ ls.doctor_name }},  {{ ls.day }}.{{ ls.month }}.2025 г. на {{ ls.time }}</h1>
+    <hr>
+    <button class="li"><a href="/">На главную</a></button>
+{% endblock %}

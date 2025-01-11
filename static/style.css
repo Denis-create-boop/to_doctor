@@ -1,0 +1,104 @@
+body {
+    background-color: rgb(126, 212, 212);
+}
+
+.body {
+    background-color: rgb(126, 212, 212);
+}
+
+.names {
+    padding-top: 50px;
+    column-count: 4;
+    column-width: 50px;
+    column-gap: 2px;
+
+}
+
+
+.li {
+    width: 150px;
+    color: rgb(5, 63, 60);
+}
+
+
+
+.li1 {
+    width: 150px;
+    color: rgb(239, 42, 28);
+}
+
+.Body {
+    background-image: url('img/backgraund.jpg_wh1200.jpg');
+    background-repeat: repeat;
+    background-size: auto;
+}
+
+button a {
+    color: rgb(31, 40, 57);
+}
+
+
+button a:hover {
+    color: rgb(118, 15, 34);
+}
+
+
+
+.h1 {
+    position: relative;
+    text-align: center;
+    color:rgb(129, 65, 65);
+}
+
+.P {
+    font-size:x-large;
+    font-style: italic;
+    color:rgba(1, 45, 63, 0.733);
+}
+
+ul li {
+    height: 50px;
+}
+ul li a {
+    text-decoration: none;
+}
+li a:hover {
+    color:rgb(203, 109, 72)
+}
+
+form input:hover {
+    color: rgb(166, 235, 240);
+}
+
+form input {
+    background-color: rgb(156, 223, 49);
+}
+
+.form {
+    background-color: red;
+    width: 150px;
+}
+
+
+.day {
+    width: 30px;
+    height: 30px;
+}
+
+
+.grid {
+    display: grid;
+    grid-template-columns: 165px 165px 165px 165px 165px 165px 165px;
+    
+}
+
+.grid > * {
+    background-color: beige;
+    border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -moz-border-radius: 5px;
+    -ms-border-radius: 5px;
+    -o-border-radius: 5px;
+    padding: 7px;
+    margin: 2px;
+}

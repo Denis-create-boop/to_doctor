@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block title %}
+    <title>{{ ls.title }}</title>
+    {% endblock %}
+</head>
+{% block content %}
+<body class="Body">
+    <div>
+        <h1 class="h1">Запишитесь на прием к врачу</h1>
+        <h2 class="h1">выберите специалиста к которому хотите записаться на прием</h2>
+    </div>
+    
+    <div class="names">
+    <ul>
+        <li>
+            <a href="/terapevts" class="P"> <!--terapevts-->
+                терапевт
+            </a>
+        <li>
+            <a href="/surgeons" class="P"> <!--surgeons-->
+                хирург
+            </a>
+        </li>
+        <li>
+            <a href="/ophthalmologists" class="P"> <!--ophthalmologists-->
+                окулист
+            </a>
+        </li>
+        <li>
+            <a href="/ents" class="P">  <!--ents-->
+                ЛОР
+            </a>
+        </li>
+        <li>
+            <a href="/traumatologists" class="P"> <!--traumatologists-->
+                травматолог
+            </a>
+        </li>
+        <li>
+            <a href="/dantists" class="P"> <!--dantists-->
+                стоматолог
+            </a>
+        </li>
+        <li>
+            <a href="/pediatricians" class="P"> <!--pediatricians-->
+                педиатр
+            </a>
+        </li>
+        <li>
+            <a href="/orthopedics" class="P"> <!--orthopedics-->
+                ортопед
+            </a>
+        </li>
+        <li>
+            <a href="/neurologists" class="P"> <!--neurologists-->
+                невролог
+            </a>
+        </li>
+        <li>
+            <a href="/cardiologists" class="P"> <!--cardiologists-->
+                кардиолог
+            </a>
+        </li>
+        <li>
+            <a href="/genicologists" class="P">  <!--genicologists-->
+                гениколог
+            </a>
+        </li>
+        <li>
+            <a href="/psychiatrists" class="P"> <!--psychiatrists-->
+                психиатр
+            </a>
+        </li>
+        <li>
+            <a href="/narcologists" class="P"> <!--narcologists-->
+                нарколог
+            </a>
+        </li>
+        <li>
+            <a href="/urologists" class="P"> <!--urologists-->
+                уролог
+            </a>
+        </li>
+        <li>
+            <a href="/praktologists" class="P"> <!--praktologists-->
+                практолог
+            </a>
+        </li>
+        <li>
+            <a href="/pulmanologists" class="P"> <!--pulmanologists-->
+                пульманолог
+            </a>
+        </li>
+    </ul>
+    </div>
+
+    
+
+</body>
+{% endblock %}
+{% block footer %}
+{% endblock %}
+</html>
