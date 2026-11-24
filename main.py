@@ -42,10 +42,32 @@ SPECIALTIES = [
  ('praktologists','Проктология','Проктолог','✣','Консультация специалиста',1),
  ('pulmanologists','Пульмонология','Пульмонолог','≈','Органы дыхания',0),
 ]
+# Fictional demonstration names, not verified medical professionals.
 NAMES = [
- ['Бублик Е.И.','Прокопенко С.В.','Андропов Р.В.','Крынин И.А.','Ресникова Н.С.','Тронина О.П.'],
- ['Сицина А.Л.','Полежайкин С.Р.','Сыбин Д.А.','Дикарева О.С.','Сидоров В.В.','Тихонов А.В.'],
- ['Свиридов А.Н.','Сонина Т.В.','Тимощук О.С.','Куций С.А.','Агафонова И.В.','Смирнов В.С.'],
+  [
+    "Вересова Алиса Михайловна",
+    "Ладомиров Артём Олегович",
+    "Светлогоров Кирилл Ильич",
+    "Яснопольский Максим Андреевич",
+    "Речникова Софья Павловна",
+    "Миролюбова Дарья Романовна"
+  ],
+  [
+    "Лазурина Полина Игоревна",
+    "Зоринцев Матвей Сергеевич",
+    "Ветлин Даниил Аркадьевич",
+    "Озерцова Ева Николаевна",
+    "Луговец Тимур Алексеевич",
+    "Рассветов Глеб Денисович"
+  ],
+  [
+    "Тихолесов Марк Антонович",
+    "Серебрина Вера Дмитриевна",
+    "Мелодин Оскар Львович",
+    "Кленовский Илья Петрович",
+    "Янтарева Милана Викторовна",
+    "Ветроградов Роман Юрьевич"
+  ]
 ]
 CODES = [
  ['bublic','prokopenco','andropov','krinin','resnicova','tronina'],
@@ -88,7 +110,7 @@ def init_db():
         if column not in columns:
             conn.execute(f'ALTER TABLE appointments ADD COLUMN {column} TEXT')
     for slug, label, role, icon, desc, group in SPECIALTIES:
-        conn.executemany('INSERT OR IGNORE INTO doctors(specialty,code,name) VALUES(?,?,?)',
+        conn.executemany('INSERT INTO doctors(specialty,code,name) VALUES(?,?,?) ON CONFLICT(specialty,code) DO UPDATE SET name=excluded.name',
             [(slug,code,name) for code,name in zip(CODES[group],NAMES[group])])
     conn.commit()
 
