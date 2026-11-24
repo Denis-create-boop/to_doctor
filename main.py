@@ -1,182 +1,191 @@
-from flask import Flask, render_template, request
-import json
-from datetime import datetime
-from datetime import date as DATE
-import calendar
+import os
+import secrets
+import sqlite3
+from pathlib import Path
+from datetime import datetime, date, timedelta, time
+from flask import Flask, render_template, request, redirect, url_for, abort, session, g
+from werkzeug.middleware.proxy_fix import ProxyFix
 
-
-
-app = Flask(__name__)
-
-@app.route('/')
-def index():
-    ls = {'title': 'base'}
-    return render_template('base.html', ls=ls)
-
-@app.route('/terapevts')
-def terapevts():
-    ls = {'title': 'terapevts'}
-    return render_template('terapevts/terapevts_base.html', ls=ls)
-
-
-@app.route('/surgeons')
-def surgeons():
-    ls = {'title': 'surgeons'}
-    return render_template('surgeons/surgeons_base.html', ls=ls)
-
-@app.route('/ophthalmologists')
-def ophthalmologists():
-    ls = {'title': 'ophthalmologists'}
-    return render_template('ophthalmologists/ophthalmologists_base.html', ls=ls)
-
-@app.route('/ents')
-def ents():
-    ls = {'title': 'ents'}
-    return render_template('ents/ents_base.html', ls=ls)
-
-
-@app.route('/traumatologists')
-def traumatologists():
-    ls = {'title': 'traumatologist'}
-    return render_template('traumatologists/traumatologists_base.html', ls=ls)
-
-
-@app.route('/dantists')
-def dantists():
-    ls = {'title': 'dantists'}
-    return render_template('dantists/dantists_base.html', ls=ls)
-
-
-@app.route('/pediatricians')
-def pediatricians():
-    ls = {'title': 'pediatricians'}
-    return render_template('pediatricians/pediatricians_base.html', ls=ls)
-
-
-@app.route('/orthopedics')
-def orthopedics():
-    ls = {'title': 'orthopedics'}
-    return render_template('orthopedics/orthopedics_base.html', ls=ls)
-
-
-@app.route('/neurologists')
-def neurologists():
-    ls = {'title': 'neurologists'}
-    return render_template('neurologists/neurologists_base.html', ls=ls)
-
-
-@app.route('/cardiologists')
-def cardiologists():
-    ls = {'title': 'cardiologists'}
-    return render_template('cardiologists/cardiologists_base.html', ls=ls)
-
-
-@app.route('/genicologists')
-def genicologists():
-    ls = {'title': 'genicologists'}
-    return render_template('genicologists/genicologists_base.html', ls=ls)
-
-
-@app.route('/psychiatrists')
-def psychiatrists():
-    ls = {'title': 'psychiatrists'}
-    return render_template('psychiatrists/psychiatrists_base.html', ls=ls)
-
-
-@app.route('/narcologists')
-def narcologists():
-    ls = {'title': 'narcologists'}
-    return render_template('narcologists/narcologists_base.html', ls=ls)
-
-
-@app.route('/urologists')
-def urologists():
-    ls = {'title': 'urologists'}
-    return render_template('urologists/urologists_base.html', ls=ls)
-
-
-@app.route('/praktologists')
-def praktologists():
-    ls = {'title': 'praktologists'}
-    return render_template('praktologists/praktologists_base.html', ls=ls)
-
-
-@app.route('/pulmanologists')
-def pulmanologists():
-    ls = {'title': 'pulmanologists'}
-    return render_template('pulmanologists/pulmanologists_base.html', ls=ls)
-
-
-@app.route('/calendar/<doctor>/<name>/<doctor_name>/')
-def calendar_name(doctor, name, doctor_name):
-    ls = {'title': 'calendar', 'doctor': doctor, 'name': name, 'doctor_name': doctor_name, 'month': 'Выберите месяй на которую хотите записаться', 
-          'day': 'Выберите число'}
-    months = {1: 'Январь', 2: 'Февраль', 3: 'Март', 4: 'Апрель', 5: 'Май', 6: 'Июнь', 7: 'Июль', 
-              8: 'Август', 9: 'Сентябрь', 10: 'Октябрь', 11: 'Ноябрь', 12: 'Декабрь'}
-    month = datetime.now().month
-    return render_template('calendar.html', ls=ls, months=months, month=month)
-
-
-@app.route('/process_data/<index>/<doctor>/<name>/<doctor_name>/', methods=['POST', 'GET'])
-def doit(index, doctor, name, doctor_name):
-    ls = {'title': name, 'index': int(index), 'doctor': doctor, 'doctor_name': doctor_name, 0: 'понедельник', 1: 'вторник', 2: 'среда', 3: 'четверг',
-          4: 'пятница', 5: 'суббота', 6: 'воскресенье', 'DATE': DATE.today().day}
-    data = calendar.monthcalendar(year=2025, month=int(index))
-    date = datetime
-    return render_template('index.html', ls=ls, data=data, date=date)
-
-
-@app.route('/<doctor>/<name>/<month>/<day>/<doctor_name>/', methods=['POST', 'GET'])
-def day(doctor, name, month, day, doctor_name):
-    ls = {'title': 'time', 'doctor_name': doctor_name, 'name': name, 'month': month, 'day': day, 
-          'doctor': doctor}
-    cal = {}
+ROOT = Path(__file__).resolve().parent
+app = Flask(__name__, instance_relative_config=True)
+Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+secret_file = Path(app.instance_path) / 'secret.key'
+if not os.environ.get('SECRET_KEY') and not secret_file.exists():
     try:
-        with open(f'data/{doctor}/{name}.json', 'r') as file:
-            cal = json.load(file)
-    except:
-        with open('data/data.json', 'r') as file:
-            write = json.load(file)
+        with secret_file.open('x') as f:
+            f.write(secrets.token_hex(32))
+        secret_file.chmod(0o600)
+    except FileExistsError:
+        pass
+app.config.update(SECRET_KEY=os.environ.get('SECRET_KEY') or secret_file.read_text(), DATABASE=str(Path(app.instance_path)/'clinic.sqlite3'), SESSION_COOKIE_HTTPONLY=True, SESSION_COOKIE_SAMESITE='Lax', MAX_CONTENT_LENGTH=16384)
+# Only trust proxy headers in the known development environment.
+if os.environ.get('CODESPACE_NAME'):
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1)
+    app.config['SESSION_COOKIE_SECURE'] = True
 
-        with open(f'data/{doctor}/{name}.json', 'w') as file:
-            json.dump(write, file)
+SPECIALTIES = [
+ ('terapevts','Терапия','Терапевт','✚','Общее самочувствие и профилактика',0),
+ ('surgeons','Хирургия','Хирург','✦','Консультация хирурга',0),
+ ('ophthalmologists','Офтальмология','Офтальмолог','◉','Зрение и здоровье глаз',0),
+ ('ents','Оториноларингология','ЛОР','◌','Ухо, горло и нос',1),
+ ('traumatologists','Травматология','Травматолог','✧','Травмы и восстановление',2),
+ ('dantists','Стоматология','Стоматолог','◇','Здоровье зубов и дёсен',1),
+ ('pediatricians','Педиатрия','Педиатр','♡','Здоровье детей',2),
+ ('orthopedics','Ортопедия','Ортопед','⌁','Суставы и опорно-двигательная система',2),
+ ('neurologists','Неврология','Невролог','⌘','Нервная система',0),
+ ('cardiologists','Кардиология','Кардиолог','♥','Сердце и сосуды',2),
+ ('genicologists','Гинекология','Гинеколог','❀','Женское здоровье',0),
+ ('psychiatrists','Психиатрия','Психиатр','☼','Психическое здоровье',1),
+ ('narcologists','Наркология','Нарколог','✺','Консультация специалиста',2),
+ ('urologists','Урология','Уролог','◈','Мочевыделительная система',2),
+ ('praktologists','Проктология','Проктолог','✣','Консультация специалиста',1),
+ ('pulmanologists','Пульмонология','Пульмонолог','≈','Органы дыхания',0),
+]
+NAMES = [
+ ['Бублик Е.И.','Прокопенко С.В.','Андропов Р.В.','Крынин И.А.','Ресникова Н.С.','Тронина О.П.'],
+ ['Сицина А.Л.','Полежайкин С.Р.','Сыбин Д.А.','Дикарева О.С.','Сидоров В.В.','Тихонов А.В.'],
+ ['Свиридов А.Н.','Сонина Т.В.','Тимощук О.С.','Куций С.А.','Агафонова И.В.','Смирнов В.С.'],
+]
+CODES = [
+ ['bublic','prokopenco','andropov','krinin','resnicova','tronina'],
+ ['siczhina','polezhaykin','subin','dicareva','sidorov','tihonov'],
+ ['sviridov','sonina','timoshuck','kuchui','agafonova','smirnov'],
+]
+SLOTS = [f'{h:02d}:{m:02d}' for h in range(8,12) for m in (0,30)] + ['12:00']
+DAYS = 30
 
-        with open(f'data/{doctor}/{name}.json', 'r') as file:
-            cal = json.load(file)
+def db():
+    if 'db' not in g:
+        g.db = sqlite3.connect(app.config['DATABASE'], timeout=10)
+        g.db.row_factory = sqlite3.Row
+        g.db.execute('PRAGMA foreign_keys=ON')
+    return g.db
 
-    times = cal[month][day]
-    return render_template('time.html', ls=ls, times=times)
+@app.teardown_appcontext
+def close_db(error=None):
+    conn = g.pop('db',None)
+    if conn is not None:
+        conn.close()
 
+def init_db():
+    conn = db()
+    conn.executescript("""
+    CREATE TABLE IF NOT EXISTS doctors (
+      id INTEGER PRIMARY KEY, specialty TEXT NOT NULL, code TEXT NOT NULL,
+      name TEXT NOT NULL, UNIQUE(specialty, code)
+    );
+    CREATE TABLE IF NOT EXISTS appointments (
+      id INTEGER PRIMARY KEY, doctor_id INTEGER NOT NULL REFERENCES doctors(id),
+      visit_date TEXT NOT NULL, visit_time TEXT NOT NULL,
+      patient_name TEXT NOT NULL, reference TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(doctor_id, visit_date, visit_time)
+    );
+    """)
+    for slug, label, role, icon, desc, group in SPECIALTIES:
+        conn.executemany('INSERT OR IGNORE INTO doctors(specialty,code,name) VALUES(?,?,?)',
+            [(slug,code,name) for code,name in zip(CODES[group],NAMES[group])])
+    conn.commit()
 
-@app.route('/write/<doctor>/<name>/<month>/<day>/<time>/<doctor_name>/', methods=['POST', 'GET'])
-def writes(doctor, name, month, day, time, doctor_name, wrong=''):
-    ls = {'title': 'write', 'doctor_name': doctor_name, 'doctor': doctor, 'name': name, 'month': month, 
-          'day': day, 'time': time}
-    return render_template('write.html', ls=ls, wrong=wrong)
+def now():
+    return datetime.now()
 
+def valid_date(value):
+    try:
+        day = date.fromisoformat(value or '')
+    except ValueError:
+        return None
+    today = now().date()
+    return day if today <= day <= today + timedelta(days=DAYS-1) else None
 
-@app.route('/write_data/<doctor>/<name>/<month>/<day>/<time>/<doctor_name>/', methods=['POST'])
-def write_data(doctor, name, month, day, time, doctor_name):
-    name_form = request.form.get('writer')
-    write = {}
-    ls = {'title': 'write', 'doctor_name': doctor_name, 'name': name, 'month': month, 'day': day, 
-    'time': time}
-    
-    with open(f'data/{doctor}/{name}.json', 'r') as file:
-        write = json.load(file)
-    
-    if name_form != '':
-        write[month][day][time] = name_form
+def slots_for(doctor_id, day):
+    occupied = {r['visit_time'] for r in db().execute(
+        'SELECT visit_time FROM appointments WHERE doctor_id=? AND visit_date=?',(doctor_id,day.isoformat()))}
+    current = now()
+    return [{'time':s,'available':s not in occupied and datetime.combine(day,time.fromisoformat(s))>current,
+             'occupied':s in occupied} for s in SLOTS]
 
-        with open(f'data/{doctor}/{name}.json', 'w') as file:
-            json.dump(write, file)
+def get_doctor(doctor_id):
+    row = db().execute('SELECT * FROM doctors WHERE id=?',(doctor_id,)).fetchone()
+    if row is None: abort(404)
+    return row
 
-        return render_template('answer.html', ls=ls)
+def csrf():
+    if 'csrf' not in session: session['csrf'] = secrets.token_urlsafe(32)
+    return session['csrf']
 
-    else:
-        wrong = 'Вы не ввели ФИО'
-        return writes(doctor, name, month, day, time, doctor_name, wrong)
+@app.after_request
+def security(response):
+    response.headers['X-Content-Type-Options']='nosniff'
+    response.headers['Referrer-Policy']='same-origin'
+    response.headers['X-Frame-Options']='DENY'
+    response.headers['Cache-Control']='no-store'
+    return response
 
+@app.get('/')
+def index():
+    return render_template('home.html', specialties=SPECIALTIES)
 
-if __name__ == '__main__':
-    app.run()
+@app.get('/specialty/<slug>')
+@app.get('/<slug>')
+def specialty(slug):
+    spec = next((s for s in SPECIALTIES if s[0]==slug),None)
+    if spec is None: abort(404)
+    doctors = db().execute('SELECT * FROM doctors WHERE specialty=? ORDER BY id',(slug,)).fetchall()
+    return render_template('doctors.html',spec=spec,doctors=doctors)
+
+@app.route('/book/<int:doctor_id>',methods=['GET','POST'])
+def book(doctor_id):
+    doctor=get_doctor(doctor_id)
+    spec=next(s for s in SPECIALTIES if s[0]==doctor['specialty'])
+    today=now().date()
+    dates=[today+timedelta(days=i) for i in range(DAYS)]
+    raw=request.form.get('day') if request.method=='POST' else request.args.get('day')
+    day=valid_date(raw) if raw else today
+    if day is None: abort(400)
+    error=''
+    name=''
+    selected=''
+    status=200
+    if request.method=='POST':
+        if not secrets.compare_digest(request.form.get('csrf',''),session.get('csrf','invalid')):
+            abort(400)
+        name=' '.join(request.form.get('patient_name','').split())
+        selected=request.form.get('visit_time','')
+        if not 3<=len(name)<=120:
+            error='Введите ФИО (от 3 до 120 символов).'
+        elif selected not in SLOTS or datetime.combine(day,time.fromisoformat(selected))<=now():
+            error='Выберите доступное время в будущем.'
+        else:
+            reference=secrets.token_urlsafe(24)
+            try:
+                with db():
+                    db().execute('INSERT INTO appointments(doctor_id,visit_date,visit_time,patient_name,reference) VALUES(?,?,?,?,?)',
+                        (doctor_id,day.isoformat(),selected,name,reference))
+                session['last_booking']=reference
+                return redirect(url_for('confirmation'))
+            except sqlite3.IntegrityError:
+                error='Это время уже занято. Пожалуйста, выберите другое.'
+                status=409
+        if not error: status=200
+        elif status!=409: status=400
+    return render_template('booking.html',doctor=doctor,spec=spec,dates=dates,day=day,slots=slots_for(doctor_id,day),csrf=csrf(),error=error,name=name,selected=selected),status
+
+@app.get('/confirmation')
+def confirmation():
+    reference=session.get('last_booking')
+    row=db().execute('SELECT a.visit_date,a.visit_time,d.name,d.specialty FROM appointments a JOIN doctors d ON d.id=a.doctor_id WHERE a.reference=?',(reference,)).fetchone()
+    if row is None: return redirect(url_for('index'))
+    spec=next(s for s in SPECIALTIES if s[0]==row['specialty'])
+    return render_template('confirmation.html',booking=row,spec=spec)
+
+@app.cli.command('init-db')
+def init_command():
+    init_db()
+    print('SQLite initialized')
+
+with app.app_context():
+    init_db()
+
+if __name__=='__main__':
+    app.run(host='0.0.0.0',port=5000)
