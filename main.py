@@ -1,4 +1,5 @@
 import os
+import re
 import secrets
 import sqlite3
 from pathlib import Path
@@ -77,11 +78,15 @@ def init_db():
     CREATE TABLE IF NOT EXISTS appointments (
       id INTEGER PRIMARY KEY, doctor_id INTEGER NOT NULL REFERENCES doctors(id),
       visit_date TEXT NOT NULL, visit_time TEXT NOT NULL,
-      patient_name TEXT NOT NULL, reference TEXT NOT NULL UNIQUE,
+      patient_name TEXT NOT NULL, snils TEXT, birth_date TEXT, reference TEXT NOT NULL UNIQUE,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(doctor_id, visit_date, visit_time)
     );
     """)
+    columns = {r['name'] for r in conn.execute('PRAGMA table_info(appointments)')}
+    for column in ('snils', 'birth_date'):
+        if column not in columns:
+            conn.execute(f'ALTER TABLE appointments ADD COLUMN {column} TEXT')
     for slug, label, role, icon, desc, group in SPECIALTIES:
         conn.executemany('INSERT OR IGNORE INTO doctors(specialty,code,name) VALUES(?,?,?)',
             [(slug,code,name) for code,name in zip(CODES[group],NAMES[group])])
@@ -146,22 +151,36 @@ def book(doctor_id):
     error=''
     name=''
     selected=''
+    snils=''
+    birth_date=''
     status=200
     if request.method=='POST':
         if not secrets.compare_digest(request.form.get('csrf',''),session.get('csrf','invalid')):
             abort(400)
         name=' '.join(request.form.get('patient_name','').split())
         selected=request.form.get('visit_time','')
+        snils=request.form.get('snils','').strip()
+        birth_date=request.form.get('birth_date','').strip()
+        digits=re.sub(r'[ -]', '', snils)
+        try:
+            born=date.fromisoformat(birth_date)
+            valid_birth=date(1900,1,1)<=born<=today
+        except ValueError:
+            valid_birth=False
         if not 3<=len(name)<=120:
             error='Введите ФИО (от 3 до 120 символов).'
+        elif not re.fullmatch(r'[0-9]{11}',digits):
+            error='Введите СНИЛС: 11 цифр.'
+        elif not valid_birth:
+            error='Укажите корректную дату рождения, не позднее сегодняшнего дня.'
         elif selected not in SLOTS or datetime.combine(day,time.fromisoformat(selected))<=now():
             error='Выберите доступное время в будущем.'
         else:
             reference=secrets.token_urlsafe(24)
             try:
                 with db():
-                    db().execute('INSERT INTO appointments(doctor_id,visit_date,visit_time,patient_name,reference) VALUES(?,?,?,?,?)',
-                        (doctor_id,day.isoformat(),selected,name,reference))
+                    db().execute('INSERT INTO appointments(doctor_id,visit_date,visit_time,patient_name,snils,birth_date,reference) VALUES(?,?,?,?,?,?,?)',
+                        (doctor_id,day.isoformat(),selected,name,digits,born.isoformat(),reference))
                 session['last_booking']=reference
                 return redirect(url_for('confirmation'))
             except sqlite3.IntegrityError:
@@ -169,7 +188,7 @@ def book(doctor_id):
                 status=409
         if not error: status=200
         elif status!=409: status=400
-    return render_template('booking.html',doctor=doctor,spec=spec,dates=dates,day=day,slots=slots_for(doctor_id,day),csrf=csrf(),error=error,name=name,selected=selected),status
+    return render_template('booking.html',doctor=doctor,spec=spec,dates=dates,day=day,slots=slots_for(doctor_id,day),csrf=csrf(),error=error,name=name,selected=selected,snils=snils,birth_date=birth_date,today=today),status
 
 @app.get('/confirmation')
 def confirmation():
