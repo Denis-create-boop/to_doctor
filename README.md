@@ -130,3 +130,8 @@ Python · Flask · SQLite · Jinja2 · HTML · CSS
 ---
 
 **МЕДИКА** · Учебный проект онлайн-записи к врачу.
+
+
+## GitHub Actions / Pages
+
+[Открыть браузерную демонстрацию](https://denis-create-boop.github.io/to_doctor/). Workflow `Publish clinic demo` запускается при push в main или вручную. При необходимости в Settings → Pages → Source выберите GitHub Actions. Pages не исполняет Flask: статическая демонстрация сохраняет только идентификатор врача, дату и время в localStorage, без ФИО, СНИЛС и даты рождения. Записи не синхронизируются между браузерами. Полная серверная версия с SQLite запускается в приватном Codespace как описано выше.
