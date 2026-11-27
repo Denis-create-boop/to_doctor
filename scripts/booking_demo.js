@@ -1,6 +1,7 @@
 (() => {
   const form = document.querySelector("#demo-booking");
   if (!form) return;
+  form.noValidate=true;
   const key = "medika-demo-slots-v1";
   const dates = document.querySelector(".date-grid"), times = document.querySelector(".time-grid");
   const dayInput = form.querySelector('[name="day"]'), submit = form.querySelector("button");
@@ -33,17 +34,26 @@
       const span=document.createElement("span"),small=document.createElement("small");span.textContent=t;small.textContent=taken?"Занято":past?"Прошло":"Свободно";span.append(small);l.append(input,span);times.append(l);if(!input.disabled)count++;
     }
     submit.disabled=!count;
+    const available=times.querySelector("input:not(:disabled)");
+    if(available)available.checked=true;
   }
   form.querySelectorAll('p').forEach(p=>{if(p.textContent.includes("свободных часов нет"))p.remove()});
   form.querySelector('[name="birth_date"]').max=iso(today);
+  const error=document.createElement("div");error.className="error";error.hidden=true;error.setAttribute("role","alert");submit.before(error);
+  function fail(message){error.textContent=message;error.hidden=false;error.scrollIntoView({block:"nearest"});}
   form.addEventListener("submit",e=>{
     e.preventDefault();
+    error.hidden=true;
     const data=new FormData(form);
+    const name=String(data.get("patient_name")||"").trim();
+    const birth=String(data.get("birth_date")||"");
+    if(name.length<3||name.length>120)return fail("Введите ФИО пациента.");
+    if(!birth||birth<"1900-01-01"||birth>iso(today))return fail("Укажите корректную дату рождения.");
     const digits=String(data.get("snils")||"").replace(/[ -]/g,"");
-    if(!/^\d{11}$/.test(digits)){alert("Введите СНИЛС: 11 цифр.");return}
+    if(!/^\d{11}$/.test(digits)){fail("Введите СНИЛС: 11 цифр.");return}
     const time=data.get("visit_time");
-    if(!time||!slots.includes(time)||new Date(selected+"T"+time)<=new Date()||occupied(selected,time)){render();alert("Выберите доступное время.");return}
-    try{localStorage.setItem(key,JSON.stringify([...read(),[form.dataset.doctor,selected,time].join("|")]))}catch{alert("Браузер не разрешил сохранить демонстрационную запись.");return}
+    if(!time||!slots.includes(time)||new Date(selected+"T"+time)<=new Date()||occupied(selected,time)){fail("Выберите доступное время приёма, нажав на нужную ячейку.");return}
+    try{localStorage.setItem(key,JSON.stringify([...read(),[form.dataset.doctor,selected,time].join("|")]))}catch{fail("Браузер не разрешил сохранить демонстрационную запись.");return}
     const receipt={doctor:summary.querySelector("h2").textContent.trim(),specialty:summary.querySelector("p").textContent.trim(),date:selected,time};
     const params=new URLSearchParams({doctor:form.dataset.doctor,date:selected,time});
     // No patient name, SNILS or birth date is stored or included in the URL.
@@ -60,7 +70,8 @@
     next.onclick=openReceipt;
     modal.addEventListener("cancel",e=>{e.preventDefault();openReceipt()});
     modal.append(check,title,detail,next);document.body.append(modal);
-    if(typeof modal.showModal==="function"){modal.showModal();next.focus()}else{openReceipt()}
+    modal.classList.add("booking-confirm-dialog");
+    if(typeof modal.showModal==="function"){try{modal.showModal();next.focus()}catch{openReceipt()}}else{openReceipt()}
   });
   window.addEventListener("storage",e=>{if(e.key===key)render()});
   render();

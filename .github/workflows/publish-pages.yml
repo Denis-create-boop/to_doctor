@@ -26,6 +26,11 @@ jobs:
           test -s site/static/booking_demo.js
           test "$(find site/book -name index.html | wc -l)" -eq 96
           test -z "$(find site -name '*.sqlite3' -o -name 'secret.key')"
+      - name: Test booking in Chromium
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+          python scripts/test_booking_pages.py
       - uses: actions/configure-pages@v5
         with:
           enablement: true

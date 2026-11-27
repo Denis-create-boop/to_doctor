@@ -27,3 +27,5 @@
 @media (prefers-reduced-motion: reduce) {
   .hero-art .medical-cross,.hero-art .ring,.hero-art .floatcard { animation:none; will-change:auto; }
 }
+
+.booking-confirm-dialog{margin:auto;position:fixed;inset:0;max-height:90vh;overflow:auto}.booking-confirm-dialog::backdrop{background:#173c3888}.receipt[hidden],.error[hidden]{display:none}.time input{inset:0;z-index:1}.time input:checked+span{background:#328475;color:#fff}

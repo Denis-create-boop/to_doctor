@@ -30,6 +30,9 @@ def write(path, html):
     dest = OUT / path / "index.html"
     dest.parent.mkdir(parents=True, exist_ok=True)
     html = rewrite(html)
+    # Version assets so browsers never reuse previous booking scripts.
+    version=os.environ.get("GITHUB_SHA","local")[:12]
+    html=re.sub(r'(src|href)="(/to_doctor/static/[^"?]+\.(?:js|css))"', lambda m: f'{m[1]}="{m[2]}?v={version}"', html)
     html = html.replace('</nav>', '<a href="/to_doctor/confirmation/">Моя запись</a></nav>')
     notice = '<div style="padding:12px;text-align:center;background:#fff2ce;color:#54400c">Демонстрация GitHub Pages. Записи сохраняются только в этом браузере. Используйте вымышленные данные.</div>'
     dest.write_text(html.replace("<main>", notice+"<main>"),encoding="utf-8")
