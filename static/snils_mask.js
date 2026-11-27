@@ -1,7 +1,7 @@
 (() => {
  const input=document.querySelector('input[name="snils"]');
  if(!input)return;
- const pattern="___-___-___ __";
+ const pattern="___-___-___-__";
  const slots=[0,1,2,4,5,6,8,9,10,12,13];
  const digits=value=>value.replace(/[^0-9]/g,"").slice(0,11);
  const format=value=>{const d=digits(value);return [...pattern].map((c,i)=>c==="_"?(d[slots.indexOf(i)]||"_"):c).join("");};
@@ -17,7 +17,7 @@
   const remaining=document.createElement("span");
   const boundary=d.length===11?14:slots[d.length];
   entered.textContent=formatted.slice(0,boundary);
-  remaining.textContent=formatted.slice(boundary);
+  remaining.textContent=formatted.slice(boundary).replace(/_/g,"0");
   guide.append(entered,remaining);
  }
  function formatInput(){

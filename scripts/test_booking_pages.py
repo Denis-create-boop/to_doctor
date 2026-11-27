@@ -19,13 +19,15 @@ try:
         page.locator('input[name="visit_time"]:not([disabled])').first.check()
         page.locator('input[name="patient_name"]').fill("Учебный Пациент")
         snils=page.locator('input[name="snils"]')
-        snils.fill("111")
-        assert page.locator(".snils-mask-guide").inner_text()=="111-___-___ __"
+        snils.fill("145")
+        assert page.locator(".snils-mask-guide").inner_text()=="145-000-000-00"
+        assert page.locator(".snils-mask-guide .snils-entered").inner_text()=="145-"
+        assert snils.input_value()=="145"
         snils.fill("00000000000")
         snils.press("End")
         snils.press("9")
-        assert page.locator(".snils-mask-guide").inner_text()=="000-000-000 00"
-        assert page.locator('input[name="snils"]').input_value()=="000-000-000 00"
+        assert page.locator(".snils-mask-guide").inner_text()=="000-000-000-00"
+        assert page.locator('input[name="snils"]').input_value()=="000-000-000-00"
         page.locator('input[name="birth_date"]').fill("2000-01-01")
         day=page.locator('input[name="day"]').input_value()
         slot=page.locator('input[name="visit_time"]:checked').input_value()
