@@ -19,6 +19,9 @@ def rewrite(html):
         parts = urlsplit(path)
         p = parts.path
         if not p.startswith("/static/"):
+            # Flask url_for chooses the short /<slug> route; Pages uses explicit specialty directories.
+            if p.strip("/") in {spec[0] for spec in SPECIALTIES}:
+                p = "/specialty/" + p.strip("/")
             p = p.rstrip("/") + "/"
         return f'{attr}="/to_doctor{p}' + (f'?{parts.query}' if parts.query else '') + (f'#{parts.fragment}' if parts.fragment else '') + '"'
     return re.sub(r'(href|src)="(/[^"]*)"',link,html)
@@ -53,3 +56,23 @@ with TemporaryDirectory() as tmp:
             write(f"book/{doctor_id}",html)
 (OUT/".nojekyll").touch()
 print(f"Generated {len(ids)} booking pages")
+
+# Fail the build if any generated internal navigation points to a missing page.
+from html.parser import HTMLParser
+class Links(HTMLParser):
+    def __init__(self):
+        super().__init__()
+        self.paths=[]
+    def handle_starttag(self, tag, attrs):
+        for key,value in attrs:
+            if key in ("href","src") and value and value.startswith("/to_doctor/"):
+                self.paths.append(urlsplit(value).path.removeprefix("/to_doctor/"))
+for page in OUT.rglob("*.html"):
+    parser=Links()
+    parser.feed(page.read_text(encoding="utf-8"))
+    for path in parser.paths:
+        target=OUT/path
+        if target.is_dir(): target=target/"index.html"
+        if not target.is_file():
+            raise RuntimeError(f"Broken link in {page}: {path}")
+print("All internal links verified")
