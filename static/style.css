@@ -30,4 +30,4 @@
 
 .booking-confirm-dialog{margin:auto;position:fixed;inset:0;max-height:90vh;overflow:auto}.booking-confirm-dialog::backdrop{background:#173c3888}.receipt[hidden],.error[hidden]{display:none}.time input{inset:0;z-index:1}.time input:checked+span{background:#328475;color:#fff}
 
-.snils-mask-wrap{position:relative;min-width:0}.snils-mask-wrap input{position:relative;z-index:1;font-family:ui-monospace,Consolas,monospace;font-variant-numeric:tabular-nums;letter-spacing:0; color:transparent;caret-color:var(--ink)}.snils-mask-wrap input::selection{color:var(--ink);background:#b8ddd2}.snils-mask-guide{position:absolute;z-index:2;pointer-events:none;top:50%;left:14px;transform:translateY(-50%);font-family:ui-monospace,Consolas,monospace;font-weight:650;font-size:inherit;font-variant-numeric:tabular-nums;letter-spacing:0;white-space:pre;color:#869c96}.snils-mask-guide .snils-entered{color:var(--ink)}
+#snils-display{font-variant-numeric:tabular-nums;letter-spacing:.04em}

@@ -1,47 +1,45 @@
 (() => {
  const input=document.querySelector('input[name="snils"]');
  if(!input)return;
- const pattern="___-___-___-__";
- const slots=[0,1,2,4,5,6,8,9,10,12,13];
- const digits=value=>value.replace(/[^0-9]/g,"").slice(0,11);
- const format=value=>{const d=digits(value);return [...pattern].map((c,i)=>c==="_"?(d[slots.indexOf(i)]||"_"):c).join("");};
- const wrapper=document.createElement("div");wrapper.className="snils-mask-wrap";
- input.before(wrapper);wrapper.append(input);
- const guide=document.createElement("span");guide.className="snils-mask-guide";guide.setAttribute("aria-hidden","true");wrapper.append(guide);
- input.maxLength=14;input.placeholder="";input.autocomplete="off";
- function refresh(){
-  const d=digits(input.value);
-  const formatted=format(d);
-  guide.replaceChildren();
-  const entered=document.createElement("span");entered.className="snils-entered";
-  const remaining=document.createElement("span");
-  const boundary=d.length===11?14:slots[d.length];
-  entered.textContent=formatted.slice(0,boundary);
-  remaining.textContent=formatted.slice(boundary).replace(/_/g,"0");
-  guide.append(entered,remaining);
+ const positions=[0,1,2,4,5,6,8,9,10,12,13];
+ const clean=v=>v.replace(/[^0-9]/g,"").slice(0,11);
+ let digits=clean(input.value);
+ const hidden=document.createElement("input");
+ hidden.type="hidden";hidden.name="snils";
+ input.name="snils_display";input.id="snils-display";
+ input.removeAttribute("required");input.maxLength=14;
+ input.after(hidden);
+ const index=pos=>positions.filter(p=>p<pos).length;
+ function render(caret=digits.length){
+  const padded=digits.padEnd(11,"0");
+  input.value=padded.slice(0,3)+"-"+padded.slice(3,6)+"-"+padded.slice(6,9)+"-"+padded.slice(9);
+  hidden.value=digits;
+  input.dataset.filled=String(digits.length);
+  input.setCustomValidity(digits.length===11?"":"Введите 11 цифр СНИЛС.");
+  input.style.color=digits.length?"":"#869c96";
+  const p=positions[Math.min(caret,11)]??14;
+  input.setSelectionRange(p,p);
  }
- function formatInput(){
-  const raw=input.value,pos=input.selectionStart??raw.length;
-  const count=Math.min(11, digits(raw.slice(0,pos)).length);
-  const d=digits(raw);
-  input.value=format(d).split("_")[0].replace(/[- ]$/,"");
-  let cursor=0,seen=0;
-  while(cursor<input.value.length&&seen<count){if(/[0-9]/.test(input.value[cursor]))seen++;cursor++;}
-  input.setSelectionRange(cursor,cursor);refresh();
+ function edit(value,back=false,forward=false){
+  let a=Math.min(index(input.selectionStart??0),digits.length);
+  let b=Math.min(index(input.selectionEnd??0),digits.length);
+  if(back&&a===b)a=Math.max(0,a-1);
+  if(forward&&a===b)b=Math.min(digits.length,b+1);
+  const added=clean(value).slice(0,11-digits.length+b-a);
+  digits=digits.slice(0,a)+added+digits.slice(b);
+  render(a+added.length);
  }
- input.addEventListener("input",formatInput);
  input.addEventListener("beforeinput",e=>{
-  if(e.inputType==="insertText"&&e.data){
-   const selected=input.value.slice(input.selectionStart,input.selectionEnd);
-   if(!/^[0-9]+$/.test(e.data)||digits(input.value).length-digits(selected).length+e.data.length>11)e.preventDefault();
+  if(e.inputType.startsWith("insert")&&e.data!==null){
+   e.preventDefault();edit(e.data);
+  }else if(e.inputType==="deleteContentBackward"||e.inputType==="deleteContentForward"){
+   e.preventDefault();edit("",e.inputType==="deleteContentBackward",e.inputType==="deleteContentForward");
   }
  });
- input.addEventListener("keydown",e=>{
-  const p=input.selectionStart;
-  if(e.key==="Backspace"&&p===input.selectionEnd&&p>1&&/[- ]/.test(input.value[p-1])){
-   e.preventDefault();input.value=input.value.slice(0,p-2)+input.value.slice(p);input.setSelectionRange(p-2,p-2);formatInput();
-  }
- });
- input.form?.addEventListener("reset",()=>setTimeout(refresh,0));
- formatInput();
+ input.addEventListener("paste",e=>{e.preventDefault();edit(e.clipboardData.getData("text"));});
+ input.addEventListener("input",()=>{digits=clean(input.value);render();});
+ input.addEventListener("focus",()=>{if(!digits.length)input.setSelectionRange(0,0);});
+ input.addEventListener("click",()=>{if(index(input.selectionStart)>digits.length)render();});
+ input.form?.addEventListener("reset",()=>setTimeout(()=>{digits="";render();},0));
+ render();
 })();

@@ -18,16 +18,15 @@ try:
         page.locator(".date-grid .day").nth(2).click()
         page.locator('input[name="visit_time"]:not([disabled])').first.check()
         page.locator('input[name="patient_name"]').fill("Учебный Пациент")
-        snils=page.locator('input[name="snils"]')
-        snils.fill("145")
-        assert page.locator(".snils-mask-guide").inner_text()=="145-000-000-00"
-        assert page.locator(".snils-mask-guide .snils-entered").inner_text()=="145-"
-        assert snils.input_value()=="145"
-        snils.fill("00000000000")
-        snils.press("End")
-        snils.press("9")
-        assert page.locator(".snils-mask-guide").inner_text()=="000-000-000-00"
-        assert page.locator('input[name="snils"]').input_value()=="000-000-000-00"
+        snils=page.locator("#snils-display")
+        assert snils.input_value()=="000-000-000-00"
+        snils.click()
+        snils.press_sequentially("1233")
+        assert snils.input_value()=="123-300-000-00"
+        assert page.locator('input[name="snils"]').input_value()=="1233"
+        snils.press_sequentially("456789012345")
+        assert snils.input_value()=="123-345-678-90"
+        assert page.locator('input[name="snils"]').input_value()=="12334567890"
         page.locator('input[name="birth_date"]').fill("2000-01-01")
         day=page.locator('input[name="day"]').input_value()
         slot=page.locator('input[name="visit_time"]:checked').input_value()
