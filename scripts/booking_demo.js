@@ -38,12 +38,29 @@
   form.querySelector('[name="birth_date"]').max=iso(today);
   form.addEventListener("submit",e=>{
     e.preventDefault();
-    const time=new FormData(form).get("visit_time");
+    const data=new FormData(form);
+    const digits=String(data.get("snils")||"").replace(/[ -]/g,"");
+    if(!/^\d{11}$/.test(digits)){alert("Введите СНИЛС: 11 цифр.");return}
+    const time=data.get("visit_time");
     if(!time||!slots.includes(time)||new Date(selected+"T"+time)<=new Date()||occupied(selected,time)){render();alert("Выберите доступное время.");return}
     try{localStorage.setItem(key,JSON.stringify([...read(),[form.dataset.doctor,selected,time].join("|")]))}catch{alert("Браузер не разрешил сохранить демонстрационную запись.");return}
-    form.reset();render();
-    const result=document.createElement("div");result.className="panel";result.setAttribute("role","status");result.textContent="Демонстрационная запись подтверждена: "+display(selected)+" в "+time+". Персональные данные не сохранены.";
-    form.prepend(result);result.scrollIntoView({behavior:"smooth"});
+    const receipt={doctor:summary.querySelector("h2").textContent.trim(),specialty:summary.querySelector("p").textContent.trim(),date:selected,time};
+    const params=new URLSearchParams({doctor:form.dataset.doctor,date:selected,time});
+    // No patient name, SNILS or birth date is stored or included in the URL.
+    try{localStorage.setItem("medika-demo-last-v1",params.toString())}catch{}
+    form.reset();
+    const modal=document.createElement("dialog");
+    modal.className="panel success";
+    modal.style.cssText="max-width:min(92vw,480px);border:0;border-radius:20px;padding:32px;text-align:center;color:#173c38";
+    const check=document.createElement("div");check.className="check";check.textContent="✓";
+    const title=document.createElement("h2");title.textContent="Вы успешно записаны на приём!";
+    const detail=document.createElement("p");detail.textContent=receipt.doctor+" · "+display(selected)+" в "+time;
+    const next=document.createElement("button");next.type="button";next.className="button";next.textContent="Посмотреть запись";
+    const openReceipt=()=>location.assign("/to_doctor/confirmation/?"+params.toString());
+    next.onclick=openReceipt;
+    modal.addEventListener("cancel",e=>{e.preventDefault();openReceipt()});
+    modal.append(check,title,detail,next);document.body.append(modal);
+    if(typeof modal.showModal==="function"){modal.showModal();next.focus()}else{openReceipt()}
   });
   window.addEventListener("storage",e=>{if(e.key===key)render()});
   render();

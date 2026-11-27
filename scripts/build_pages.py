@@ -30,6 +30,7 @@ def write(path, html):
     dest = OUT / path / "index.html"
     dest.parent.mkdir(parents=True, exist_ok=True)
     html = rewrite(html)
+    html = html.replace('</nav>', '<a href="/to_doctor/confirmation/">Моя запись</a></nav>')
     notice = '<div style="padding:12px;text-align:center;background:#fff2ce;color:#54400c">Демонстрация GitHub Pages. Записи сохраняются только в этом браузере. Используйте вымышленные данные.</div>'
     dest.write_text(html.replace("<main>", notice+"<main>"),encoding="utf-8")
 
@@ -42,7 +43,8 @@ with TemporaryDirectory() as tmp:
     app.config["DATABASE"] = str(Path(tmp)/"demo.sqlite3")
     with app.app_context():
         init_db()
-        ids = [r["id"] for r in db().execute("SELECT id FROM doctors ORDER BY id")]
+        doctors = [dict(r) for r in db().execute("SELECT id,name,specialty FROM doctors ORDER BY id")]
+        ids = [r["id"] for r in doctors]
     with app.test_client() as client:
         write("", client.get("/").get_data(as_text=True))
         for slug,*_ in SPECIALTIES:
@@ -50,10 +52,21 @@ with TemporaryDirectory() as tmp:
         for doctor_id in ids:
             html = client.get(f"/book/{doctor_id}").get_data(as_text=True)
             html = re.sub(r'<input type="hidden" name="csrf"[^>]*>','',html)
-            html = html.replace('<form method="post">',f'<form id="demo-booking" data-doctor="{doctor_id}">')
+            html = html.replace('<form method="post">',f'<form id="demo-booking" method="post" data-doctor="{doctor_id}">')
+            html = re.sub(r' pattern="[^"]+"', '', html)
+            html = html.replace('<button class="button"', '<button class="button" type="submit"')
             html = html.replace('Время резервируется после подтверждения. Если его успеет выбрать другой посетитель, потребуется выбрать другое.','Время резервируется только в этом браузере. Другие посетители не видят ваши демонстрационные записи.')
             html = html.replace('</body>','<script src="/static/booking_demo.js"></script></body>')
             write(f"book/{doctor_id}",html)
+# Build an explicit receipt page from the existing Flask layout.
+import json
+from flask import render_template
+with app.test_request_context("/confirmation"):
+    html=render_template("confirmation_demo.html")
+    write("confirmation",html)
+roles={spec[0]:spec[2] for spec in SPECIALTIES}
+(OUT/"static"/"demo_doctors.json").write_text(json.dumps({str(d["id"]):{"name":d["name"],"specialty":roles[d["specialty"]]} for d in doctors},ensure_ascii=False),encoding="utf-8")
+shutil.copyfile(ROOT/"scripts"/"confirmation_demo.js",OUT/"static"/"confirmation_demo.js")
 (OUT/".nojekyll").touch()
 print(f"Generated {len(ids)} booking pages")
 
